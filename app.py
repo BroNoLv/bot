@@ -207,10 +207,14 @@ async def main():
         global app
         app = web.Application()
         
-        # Добавляем health check endpoint
-        async def health_check(request):
-            return web.Response(text="OK", status=200)
-        app.router.add_get('/health', health_check)
+       # Добавляем health check endpoint
+       async def health_check(request):
+          return web.Response(text="OK", status=200)
+      async def root_handler(request):
+          return web.Response(text="✅ Bot is running!", status=200)
+
+      app.router.add_get('/', root_handler)  # ← ВАЖНО для Render
+      app.router.add_get('/health', health_check)
         
         # Удаляем старый webhook и устанавливаем новый
         await bot.delete_webhook(drop_pending_updates=True)
