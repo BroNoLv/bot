@@ -199,7 +199,7 @@ async def main():
         logger.info("🤖 Настраиваем webhook...")
         
         # Webhook URL на Render
-        WEBHOOK_HOST = "https://trade-prog-2.onrender.com"
+        WEBHOOK_HOST = "https://bot-rii4.onrender.com"
         WEBHOOK_PATH = "/webhook"
         WEBHOOK_URL = f"{WEBHOOK_HOST}{WEBHOOK_PATH}"
         
