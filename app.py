@@ -32,7 +32,6 @@ from services.exchange_service import ExchangeService
 from middlewares.access_middleware import AccessMiddleware
 import random
 import string
-import os
 
 # Configure logging
 logging.basicConfig(
@@ -123,6 +122,7 @@ async def initialize_tokens():
 
 # HTTP Application (will be created in main)
 app = None
+bot_instance = None
 
 async def scheduled_tasks():
     """Background tasks"""
@@ -143,6 +143,13 @@ async def scheduled_tasks():
 async def main():
     # Проверяем, что только один экземпляр бота запущен
     check_single_instance()
+    
+    # Проверяем токен
+    if not config.BOT_TOKEN:
+        logger.error("❌ BOT_TOKEN не найден в переменных окружения!")
+        return
+    
+    logger.info(f"🔑 Токен загружен: {config.BOT_TOKEN[:10]}...{config.BOT_TOKEN[-5:] if len(config.BOT_TOKEN) > 15 else ''}")
     
     # Initialize bot and dispatcher
     # Поддержка прокси через переменную окружения PROXY_URL
@@ -203,23 +210,30 @@ async def main():
         WEBHOOK_PATH = "/webhook"
         WEBHOOK_URL = f"{WEBHOOK_HOST}{WEBHOOK_PATH}"
         
+        logger.info(f"🔗 Устанавливаю webhook на: {WEBHOOK_URL}")
+        
         # Создаем aiohttp приложение
         global app
         app = web.Application()
         
-       # Добавляем health check endpoint
-       async def health_check(request):
-          return web.Response(text="OK", status=200)
-      async def root_handler(request):
-          return web.Response(text="✅ Bot is running!", status=200)
-
-      app.router.add_get('/', root_handler)  # ← ВАЖНО для Render
-      app.router.add_get('/health', health_check)
+        # Добавляем health check endpoint
+        async def health_check(request):
+            return web.Response(text="OK", status=200)
+        
+        async def root_handler(request):
+            return web.Response(text="✅ Bot is running!", status=200)
+        
+        app.router.add_get('/', root_handler)
+        app.router.add_get('/health', health_check)
         
         # Удаляем старый webhook и устанавливаем новый
         await bot.delete_webhook(drop_pending_updates=True)
         await bot.set_webhook(WEBHOOK_URL)
         logger.info(f"✅ Webhook установлен: {WEBHOOK_URL}")
+        
+        # Проверяем установку webhook
+        webhook_info = await bot.get_webhook_info()
+        logger.info(f"📊 Текущий webhook: {webhook_info.url}")
         
         # Настраиваем webhook handler
         webhook_requests_handler = SimpleRequestHandler(
@@ -237,6 +251,7 @@ async def main():
         await site.start()
         
         logger.info(f"🌐 Сервер запущен на порту {port}")
+        logger.info(f"🌐 Сервер доступен по адресу: {WEBHOOK_HOST}")
         logger.info("🤖 Бот работает через webhook")
 
         # Keep-alive to prevent Render free tier from sleeping
