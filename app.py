@@ -11,7 +11,7 @@ from aiogram.webhook.aiohttp_server import SimpleRequestHandler, setup_applicati
 async def keep_alive_ping():
     """Keep-alive ping to prevent Render free tier from sleeping"""
     import aiohttp
-    WEBHOOK_HOST = "https://trade-prog-2.onrender.com"
+    WEBHOOK_HOST = "https://bot-rii4.onrender.com"
     while True:
         await asyncio.sleep(600)  # 10 minutes
         try:
